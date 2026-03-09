@@ -47,11 +47,11 @@ ENV_DEST_NAME = ".env.clcowiki"
 # ------------------------------------------------------------------ #
 
 def print_step(msg: str) -> None:
-    print(f"\n→ {msg}")
+    print(f"\n-> {msg}")
 
 
 def print_ok(msg: str) -> None:
-    print(f"  ✓ {msg}")
+    print(f"  [OK] {msg}")
 
 
 def print_warn(msg: str) -> None:
@@ -104,7 +104,7 @@ def step_gitignore(project_dir: Path) -> None:
         gitignore.write_text(content.rstrip() + f"\n{entry}\n", encoding="utf-8")
         print_ok(f"Added {entry} to .gitignore")
     else:
-        print_warn(".gitignore not found — skipped")
+        print_warn(".gitignore not found - skipped")
 
 
 # ------------------------------------------------------------------ #

@@ -175,3 +175,17 @@ Page metadata is stored as HTML comments at the top of MD files (invisible in re
 | `CONFLUENCE_PROJECT_NAME` | No | Label for project identification |
 
 Config file search order: `(cwd)/.env.clcowiki` → `~/.env.clcowiki`
+
+---
+
+## Coding Conventions
+
+### Logging / print output
+- Use **ASCII only** in all `print()` calls and log output across every script in this repo.
+- Replace Unicode punctuation with ASCII equivalents:
+  - `→` → `->`
+  - `✓` → `[OK]`
+  - `✗` / `✘` → `[ERROR]`
+  - `—` (em dash) → `-`
+  - `…` (ellipsis) → `...`
+- Rationale: Windows cp949 console raises `UnicodeEncodeError` on non-ASCII output.

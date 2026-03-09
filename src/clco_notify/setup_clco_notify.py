@@ -141,8 +141,10 @@ def resolve_scope(args):
     else:
         claude_dir = Path.home() / ".claude"
         env_dir = claude_dir
-        # Absolute path so the command works from any project directory
-        hook_cmd_path = str(claude_dir / HOOK_SUBPATH)
+        # Absolute path so the command works from any project directory.
+        # Use forward slashes so bash (used by Claude Code on Windows) doesn't
+        # interpret backslashes as escape characters.
+        hook_cmd_path = (claude_dir / HOOK_SUBPATH).as_posix()
         return "global", claude_dir, env_dir, hook_cmd_path
 
 

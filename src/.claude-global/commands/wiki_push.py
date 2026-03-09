@@ -155,11 +155,11 @@ def main() -> None:
 
     try:
         if page_id:
-            print(f"Updating Confluence page {page_id} …")
+            print(f"Updating Confluence page {page_id} ...")
             result = client.update_page(page_id, title, wiki_content)
             action = "Updated"
         else:
-            print(f"Creating new Confluence page in space {space_key} …")
+            print(f"Creating new Confluence page in space {space_key} ...")
             result = client.create_page(space_key, title, wiki_content, parent_id)
             action = "Created"
     except ConfluenceError as e:
