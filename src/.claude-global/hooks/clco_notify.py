@@ -37,6 +37,7 @@ from pathlib import Path
 def load_config():
     config = {}
     # Search order: project root (.env.clconotify) → global (~/.claude/.env.clconotify)
+    # Both files are read; project-level values take precedence over global.
     candidates = [
         Path.cwd() / ".env.clconotify",
         Path.home() / ".claude" / ".env.clconotify",
@@ -51,9 +52,8 @@ def load_config():
                     key, _, value = line.partition("=")
                     key = key.strip()
                     value = value.strip().strip('"').strip("'")
-                    if key and value:
+                    if key and value and key not in config:
                         config[key] = value
-            break  # use the first file found
     return config
 
 
