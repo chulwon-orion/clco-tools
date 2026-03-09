@@ -143,7 +143,7 @@ src/
   clco_wiki/
     setup_clco_wiki.py        이 설치 스크립트
     .env.clcowiki-example     설정 템플릿
-    README-clcowiki.md        이 문서
+    README.md                 이 문서
 ```
 
 ---
