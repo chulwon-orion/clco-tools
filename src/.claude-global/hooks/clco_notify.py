@@ -4,7 +4,7 @@ clco-notify — Claude Code Slack Notification Hook
 Sends delayed Slack notifications. If the user responds before the delay
 expires, the notification is cancelled automatically.
 
-Config file: .env.clconotify  (project root, gitignored)
+Config file: .env.clconotify  (project root or ~/.claude/, gitignored)
 Template:    .env.clconotify-example
 
 Runtime files (gitignored):
@@ -36,18 +36,24 @@ from pathlib import Path
 
 def load_config():
     config = {}
-    config_path = Path.cwd() / ".env.clconotify"
-    if config_path.exists():
-        with open(config_path, encoding="utf-8", errors="replace") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, _, value = line.partition("=")
-                key = key.strip()
-                value = value.strip().strip('"').strip("'")
-                if key and value:
-                    config[key] = value
+    # Search order: project root (.env.clconotify) → global (~/.claude/.env.clconotify)
+    candidates = [
+        Path.cwd() / ".env.clconotify",
+        Path.home() / ".claude" / ".env.clconotify",
+    ]
+    for config_path in candidates:
+        if config_path.exists():
+            with open(config_path, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if key and value:
+                        config[key] = value
+            break  # use the first file found
     return config
 
 
@@ -195,8 +201,14 @@ EVENT_LABELS = {
 }
 
 
+SLACK_MAX_LEN_CAP = 3000
+
 def _trunc(text, maxlen):
-    return text[:maxlen] + ("..." if len(text) > maxlen else "")
+    """Truncate text to maxlen chars. maxlen <= 0 means no limit. Hard cap: SLACK_MAX_LEN_CAP."""
+    effective = min(maxlen, SLACK_MAX_LEN_CAP) if maxlen > 0 else SLACK_MAX_LEN_CAP
+    if len(text) <= effective:
+        return text
+    return text[:effective] + "..."
 
 
 def build_message(event, config):
