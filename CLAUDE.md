@@ -178,6 +178,11 @@ Config file search order: `(cwd)/.env.clcowiki` → `~/.env.clcowiki`
 
 ---
 
+## Documentation Conventions
+
+- Each tool's usage documentation lives in `src/<tool>/README.md` — keep it up to date.
+- `_doc/PLAN/*.md` is design history (background, decisions, rationale) — do not duplicate usage instructions there. Link to README instead.
+
 ## Coding Conventions
 
 ### Logging / print output
