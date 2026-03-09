@@ -11,6 +11,7 @@ test/
 # Secrets
 .env.clco
 .env.clconotify
+.env.clcowiki
 
 # Python
 __pycache__/
