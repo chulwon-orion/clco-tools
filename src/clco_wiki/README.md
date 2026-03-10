@@ -24,7 +24,7 @@ python3 src/clco_wiki/setup_clco_wiki.py \
 ```
 
 설치 후:
-1. `.env.clcowiki` 파일에 Confluence 자격증명을 입력합니다
+1. `.env.clco` 파일에 Confluence 자격증명을 입력합니다
 2. Claude Code를 재시작합니다 (새 세션 시작)
 3. `/wiki-push`, `/wiki-pull` 커맨드를 사용합니다
 
@@ -95,7 +95,7 @@ HTML 주석이므로 일반 마크다운 뷰어에서는 보이지 않습니다.
 
 ## 설정 파일
 
-`.env.clcowiki`를 현재 프로젝트 또는 홈 디렉터리(`~/.env.clcowiki`)에 둡니다.
+`.env.clco`를 현재 프로젝트 또는 `~/.claude/.env.clco`(전역)에 둡니다. 두 파일이 모두 있으면 프로젝트 값이 우선합니다.
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
@@ -142,7 +142,7 @@ src/
       md_converter.py         MD ↔ Wiki Markup 양방향 변환기
   clco_wiki/
     setup_clco_wiki.py        이 설치 스크립트
-    .env.clcowiki-example     설정 템플릿
+    (src/.env.clco-example    설정 템플릿 - 통합)
     README.md                 이 문서
 ```
 
@@ -164,7 +164,7 @@ python3 ~/.claude/commands/wiki_pull.py 12345 --output docs/design.md
 
 ## 주의사항
 
-- `.env.clcowiki`는 절대 git에 커밋하지 마세요 (setup 시 자동으로 `.gitignore`에 추가됨)
+- `.env.clco`는 절대 git에 커밋하지 마세요 (setup 시 자동으로 `.gitignore`에 추가됨)
 - 이미지/첨부파일은 현재 지원하지 않습니다 (텍스트 내용만 변환)
 - 복잡한 Confluence 매크로(`{panel}`, `{info}` 등)는 pull 시 HTML 주석으로 보존됩니다
 
@@ -196,7 +196,7 @@ python3 src/clco_wiki/setup_clco_wiki.py \
 /wiki-pull 12345 --output doc.md   # Pull with custom output filename
 ```
 
-## Config (.env.clcowiki)
+## Config (.env.clco — Confluence keys)
 
 | Variable | Required | Description |
 |----------|----------|-------------|

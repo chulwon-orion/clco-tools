@@ -24,16 +24,22 @@ from clco_wiki.md_converter import wiki_to_md
 # ------------------------------------------------------------------ #
 
 def load_env() -> dict:
-    """Load .env.clcowiki from cwd or home directory."""
+    """Load .env.clco from cwd and ~/.claude/, merging both (project takes precedence)."""
     env = {}
-    for candidate in (Path.cwd() / ".env.clcowiki", Path.home() / ".env.clcowiki"):
+    candidates = [
+        Path.cwd() / ".env.clco",
+        Path.home() / ".claude" / ".env.clco",
+    ]
+    for candidate in candidates:
         if candidate.exists():
             for line in candidate.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     k, _, v = line.partition("=")
-                    env[k.strip()] = v.strip()
-            break
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k and k not in env:
+                        env[k] = v
     return env
 
 
@@ -81,7 +87,7 @@ def main() -> None:
             ("CONFLUENCE_API_TOKEN", api_token),
         ] if not v]
         print(f"ERROR: Missing required config: {', '.join(missing)}", file=sys.stderr)
-        print("Set them in .env.clcowiki in the current directory or ~/.env.clcowiki", file=sys.stderr)
+        print("Set them in .env.clco in the current directory or ~/.claude/.env.clco", file=sys.stderr)
         sys.exit(1)
 
     # ---- Resolve page ID ---------------------------------------------

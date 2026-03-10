@@ -39,10 +39,10 @@ install_global.bat
 설치 스크립트가 자동으로 처리하는 항목:
 - `clco_notify.py` → `~/.claude/hooks/` 복사
 - `~/.claude/settings.json`에 훅 이벤트 주입 (기존 설정 보존)
-- `~/.env.clconotify-example` → `~/.claude/.env.clconotify` 복사
-- `--user-id` / `--email` 값을 `.env.clconotify`에 기록
+- `src/.env.clco-example` → `~/.claude/.env.clco` 복사
+- `--user-id` / `--email` 값을 `.env.clco`에 기록
 
-### 2. `.env.clconotify` 편집
+### 2. `.env.clco` 편집
 
 ```
 SLACK_BOT_TOKEN=xoxb-your-token-here
@@ -71,7 +71,7 @@ SLACK_NOTIFY_PROJECT_NAME=MyProject
 
 ---
 
-## 설정 항목 (`.env.clconotify`)
+## 설정 항목 (`.env.clco`)
 
 | 키 | 필수 | 기본값 | 설명 |
 |----|------|--------|------|
@@ -162,8 +162,8 @@ HOOK_INJECTIONS = {
 | 파일 | git 공유 | 설명 |
 |------|----------|------|
 | `.claude/hooks/clco_notify.py` | O | 훅 스크립트 |
-| `.env.clconotify-example` | O | 설정 템플릿 |
+| `src/.env.clco-example` | O | 설정 템플릿 (통합) |
 | `setup_clco_notify.py` | O | 설치 스크립트 |
-| `.env.clconotify` | **X** | 개인 설정 (gitignore) |
+| `.env.clco` | **X** | 개인 설정 (gitignore) |
 | `.claude/hooks/.session_state.json` | **X** | 런타임 상태 (gitignore) |
 | `.claude/hooks/.pending_*.json` | **X** | 활성 타이머 (gitignore) |

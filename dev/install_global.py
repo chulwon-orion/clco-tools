@@ -4,9 +4,10 @@ Global install helper for clco-tools.
 
 Reads .env.clco from the repo root, then:
   1. Installs clco-notify globally into ~/.claude/
-  2. Writes all SLACK_* values into ~/.claude/.env.clconotify
+  2. Writes all SLACK_* values into ~/.claude/.env.clco
   3. Installs clco-wiki globally into ~/.claude/commands/
-     (runs setup from ~/ so .env.clcowiki lands at ~/.env.clcowiki)
+     (runs setup from ~/.claude/ so .env.clco lands at ~/.claude/.env.clco)
+  4. Installs clco-show globally into ~/.claude/commands/
 
 Usage:
     python dev/install_global.py
@@ -98,7 +99,7 @@ NOTIFY_KEYS = [
 
 def install_notify(cfg: dict, python: str) -> None:
     print("\n" + "=" * 50)
-    print("1/2  clco-notify - global install")
+    print("1/3  clco-notify - global install")
     print("=" * 50)
 
     setup = REPO_ROOT / "src" / "clco_notify" / "setup_clco_notify.py"
@@ -115,7 +116,7 @@ def install_notify(cfg: dict, python: str) -> None:
     run(cmd)
 
     # Write SLACK_* values into the installed env file
-    notify_env = Path.home() / ".claude" / ".env.clconotify"
+    notify_env = Path.home() / ".claude" / ".env.clco"
     print(f"\n-> Writing config values -> {notify_env}")
     for key in NOTIFY_KEYS:
         value = cfg.get(key, "")
@@ -127,7 +128,7 @@ def install_notify(cfg: dict, python: str) -> None:
 
 def install_wiki(cfg: dict, python: str) -> None:
     print("\n" + "=" * 50)
-    print("2/2  clco-wiki - global install")
+    print("2/3  clco-wiki - global install")
     print("=" * 50)
 
     setup = REPO_ROOT / "src" / "clco_wiki" / "setup_clco_wiki.py"
@@ -147,10 +148,26 @@ def install_wiki(cfg: dict, python: str) -> None:
     if cfg.get("CONFLUENCE_PARENT_PAGE_ID"):
         cmd += ["--parent-id", cfg["CONFLUENCE_PARENT_PAGE_ID"]]
 
-    # Run from home dir so .env.clcowiki is created at ~/.env.clcowiki
+    # Run from ~/.claude/ so .env.clco is created at ~/.claude/.env.clco
     # PYTHONUTF8=1 prevents UnicodeEncodeError from Unicode chars in setup_clco_wiki.py output
+    claude_dir = Path.home() / ".claude"
+    claude_dir.mkdir(parents=True, exist_ok=True)
     utf8_env = {**os.environ, "PYTHONUTF8": "1"}
-    run(cmd, cwd=str(Path.home()), env=utf8_env)
+    run(cmd, cwd=str(claude_dir), env=utf8_env)
+
+
+def install_show(cfg: dict, python: str) -> None:
+    print("\n" + "=" * 50)
+    print("3/3  clco-show - global install")
+    print("=" * 50)
+
+    setup = REPO_ROOT / "src" / "clco_show" / "setup_clco_show.py"
+    if not setup.exists():
+        print(f"[ERROR] Not found: {setup}")
+        sys.exit(1)
+
+    utf8_env = {**os.environ, "PYTHONUTF8": "1"}
+    run([python, str(setup)], env=utf8_env)
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +175,7 @@ def install_wiki(cfg: dict, python: str) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Install clco-notify and clco-wiki globally")
+    parser = argparse.ArgumentParser(description="Install clco-notify, clco-wiki, and clco-show globally")
     parser.add_argument(
         "--env-file",
         default=str(REPO_ROOT / ".env.clco"),
@@ -178,12 +195,12 @@ def main() -> None:
 
     install_notify(cfg, python)
     install_wiki(cfg, python)
+    install_show(cfg, python)
 
     print("\n" + "=" * 50)
     print("All done!")
     print("=" * 50)
-    print(f"  clco-notify env : {Path.home() / '.claude' / '.env.clconotify'}")
-    print(f"  clco-wiki env   : {Path.home() / '.env.clcowiki'}")
+    print(f"  shared env file : {Path.home() / '.claude' / '.env.clco'}")
     print()
     print("Reload Claude Code (or start a new session) to activate.")
 

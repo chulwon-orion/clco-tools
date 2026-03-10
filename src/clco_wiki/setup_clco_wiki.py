@@ -38,8 +38,8 @@ FILES_TO_COPY = [
 ]
 PACKAGE_DIR = "clco_wiki"
 
-ENV_EXAMPLE = SCRIPT_DIR / ".env.clcowiki-example"
-ENV_DEST_NAME = ".env.clcowiki"
+ENV_EXAMPLE = SCRIPT_DIR.parent / ".env.clco-example"
+ENV_DEST_NAME = ".env.clco"
 
 
 # ------------------------------------------------------------------ #
@@ -93,9 +93,9 @@ def set_env_value(env_path: Path, key: str, value: str) -> None:
 
 
 def step_gitignore(project_dir: Path) -> None:
-    """Add .env.clcowiki to .gitignore if in a git project."""
+    """Add .env.clco to .gitignore if in a git project."""
     gitignore = project_dir / ".gitignore"
-    entry = ".env.clcowiki"
+    entry = ".env.clco"
     if gitignore.exists():
         content = gitignore.read_text(encoding="utf-8")
         if entry in content:
@@ -145,8 +145,8 @@ def main() -> None:
     else:
         print_warn(f"Package directory not found: {src_pkg}")
 
-    # ---- Step 3: Create .env.clcowiki in project directory ----------
-    print_step("Creating .env.clcowiki config file")
+    # ---- Step 3: Create .env.clco in project directory ----------
+    print_step("Creating .env.clco config file")
     project_dir = Path.cwd()
     env_dest = project_dir / ENV_DEST_NAME
 
@@ -165,7 +165,8 @@ def main() -> None:
                 "# Optional\n"
                 "CONFLUENCE_SPACE_KEY=\n"
                 "CONFLUENCE_PARENT_PAGE_ID=\n"
-                "CONFLUENCE_PROJECT_NAME=\n",
+                "CONFLUENCE_PROJECT_NAME=\n"
+                "# See .env.clco-example for clco-notify (Slack) keys\n",
                 encoding="utf-8",
             )
             print_ok(f"Created (minimal): {env_dest}")
@@ -198,7 +199,7 @@ def main() -> None:
     print("Setup complete!")
     print()
     print("Next steps:")
-    print(f"  1. Edit {env_dest} and fill in your Confluence credentials")
+    print(f"  1. Edit {env_dest} and fill in your Confluence (and Slack) credentials")
     print("  2. Reload Claude Code (or start a new session)")
     print("  3. Use /wiki-push <file.md> to push a markdown file to Confluence")
     print("     Use /wiki-pull <page-id> to pull a Confluence page to markdown")

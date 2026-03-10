@@ -5,7 +5,7 @@ Installs clco-notify (Claude Code Slack notification hooks).
 
 Default (no arguments): installs globally into ~/.claude/ so it applies to all projects.
 With --project PATH:    installs into <PATH>/.claude/ for a specific project only.
-With --env-only:        installs only .env.clconotify with SLACK_NOTIFY_PROJECT_NAME set.
+With --env-only:        installs only .env.clco with SLACK_NOTIFY_PROJECT_NAME set.
                         Requires --project. Useful when the hook is already installed globally
                         and you only need a project-specific config override.
 
@@ -19,10 +19,10 @@ Usage:
 
 Options:
     --project DIR    Project root directory. Installs into <DIR>/.claude/ instead of ~/.claude/
-    --env-only       Only install .env.clconotify (skip hook script and settings.json).
+    --env-only       Only install .env.clco (skip hook script and settings.json).
                      Requires --project. Creates a minimal env file with only
                      SLACK_NOTIFY_PROJECT_NAME active; all other keys are commented out.
-                     The hook merges this file with ~/.claude/.env.clconotify at runtime,
+                     The hook merges this file with ~/.claude/.env.clco at runtime,
                      so SLACK_BOT_TOKEN and other global settings still apply.
     --user-id ID     Slack User ID to DM (e.g. U0123456789)
                      Find: Slack -> click username -> ... -> Copy member ID
@@ -33,22 +33,22 @@ What this does (full install):
     1. Detects python command (or uses --python)
     2. Copies clco_notify.py hook script to the target .claude/hooks/ directory
     3. Merges hook config into target settings.json (preserves existing hooks)
-    4. Copies .env.clconotify-example -> .env.clconotify (skips if already exists)
-    5. Writes --user-id / --email into .env.clconotify
-    6. Adds .env.clconotify to .gitignore (project install only, if git repo detected)
+    4. Copies .env.clco-example -> .env.clco (skips if already exists)
+    5. Writes --user-id / --email into .env.clco
+    6. Adds .env.clco to .gitignore (project install only, if git repo detected)
 
 What this does (--env-only, requires --project):
-    1. Creates a minimal .env.clconotify in <DIR>/ with only SLACK_NOTIFY_PROJECT_NAME active
+    1. Creates a minimal .env.clco in <DIR>/ with only SLACK_NOTIFY_PROJECT_NAME active
        (skips if already exists)
-    2. Writes --user-id / --email into .env.clconotify if provided
-    3. Adds .env.clconotify to .gitignore if git repo detected
+    2. Writes --user-id / --email into .env.clco if provided
+    3. Adds .env.clco to .gitignore if git repo detected
 
 After running:
-    Edit .env.clconotify and set SLACK_NOTIFY_PROJECT_NAME (and SLACK_BOT_TOKEN for full install).
+    Edit .env.clco and set SLACK_NOTIFY_PROJECT_NAME (and SLACK_BOT_TOKEN for full install).
 
 Scopes:
-    global (default)  Target: ~/.claude/       Env file: ~/.claude/.env.clconotify
-    --project DIR     Target: <DIR>/.claude/   Env file: <DIR>/.env.clconotify
+    global (default)  Target: ~/.claude/       Env file: ~/.claude/.env.clco
+    --project DIR     Target: <DIR>/.claude/   Env file: <DIR>/.env.clco
 """
 
 import argparse
@@ -62,12 +62,12 @@ from pathlib import Path
 # Source files (relative to this script)
 SCRIPT_DIR = Path(__file__).resolve().parent
 HOOK_SOURCE = SCRIPT_DIR.parent / ".claude-global" / "hooks" / "clco_notify.py"
-ENV_EXAMPLE_SOURCE = SCRIPT_DIR / ".env.clconotify-example"
+ENV_EXAMPLE_SOURCE = SCRIPT_DIR.parent / ".env.clco-example"
 
 HOOK_FILENAME = "clco_notify.py"
 HOOK_SUBPATH = "hooks/" + HOOK_FILENAME  # relative within .claude/
-GITIGNORE_MARKER = ".env.clconotify"
-GITIGNORE_BLOCK = "\n# clco-notify\n.env.clconotify\n"
+GITIGNORE_MARKER = ".env.clco"
+GITIGNORE_BLOCK = "\n# clco-tools\n.env.clco\n"
 
 # ---------------------------------------------------------------------------
 # Hook injection map — edit here to add, remove, or change events
@@ -112,7 +112,7 @@ def parse_args():
         action="store_true",
         default=False,
         help=(
-            "Only install .env.clconotify (skip hook and settings.json). "
+            "Only install .env.clco (skip hook and settings.json). "
             "Requires --project. Creates a minimal env with only SLACK_NOTIFY_PROJECT_NAME active."
         ),
     )
@@ -128,7 +128,7 @@ def resolve_scope(args):
     """Return (scope_label, claude_dir, env_dir, hook_cmd_path).
 
     claude_dir     — the .claude/ directory to install into (Path)
-    env_dir        — where .env.clconotify goes (Path)
+    env_dir        — where .env.clco goes (Path)
     hook_cmd_path  — path string used in the hook command in settings.json
     """
     if args.project:
@@ -272,26 +272,26 @@ def step_inject_settings(claude_dir, python_cmd, hook_cmd_path):
 
 
 # ---------------------------------------------------------------------------
-# .env.clconotify management
+# .env.clco management
 # ---------------------------------------------------------------------------
 
 def step_copy_env(env_dir):
-    """Copy .env.clconotify-example -> <env_dir>/.env.clconotify if not already present."""
-    target = env_dir / ".env.clconotify"
+    """Copy .env.clco-example -> <env_dir>/.env.clco if not already present."""
+    target = env_dir / ".env.clco"
 
     if target.exists():
         print("[SKIP] " + str(target) + " already exists - not overwriting")
         return
 
     if not ENV_EXAMPLE_SOURCE.exists():
-        print("[WARN] .env.clconotify-example not found - skipping env copy")
-        print("[INFO]  Create .env.clconotify manually with SLACK_BOT_TOKEN set.")
+        print("[WARN] .env.clco-example not found - skipping env copy")
+        print("[INFO]  Create .env.clco manually with SLACK_BOT_TOKEN set.")
         return
 
     env_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(ENV_EXAMPLE_SOURCE, target)
     print("[OK]   " + str(target) + " created from example")
-    print("[INFO]  Edit it and set SLACK_BOT_TOKEN.")
+    print("[INFO]  Edit it and set SLACK_BOT_TOKEN and SLACK_NOTIFY_USER_ID.")
 
 
 def set_env_value(env_path, key, value):
@@ -322,7 +322,7 @@ _PROJECT_ENV_MARKER = "# clco-notify Project Config"
 
 
 def _load_project_env_template():
-    """Extract the project config section from .env.clconotify-example at the marker line."""
+    """Extract the project config section from .env.clco-example at the marker line."""
     if not ENV_EXAMPLE_SOURCE.exists():
         return None
     text = ENV_EXAMPLE_SOURCE.read_text(encoding="utf-8")
@@ -333,8 +333,8 @@ def _load_project_env_template():
 
 
 def step_copy_env_project(env_dir):
-    """Create a minimal project .env.clconotify from the marked section of .env.clconotify-example."""
-    target = env_dir / ".env.clconotify"
+    """Create a minimal project .env.clco from the marked section of .env.clco-example."""
+    target = env_dir / ".env.clco"
 
     if target.exists():
         print("[SKIP] " + str(target) + " already exists - not overwriting")
@@ -342,8 +342,8 @@ def step_copy_env_project(env_dir):
 
     template = _load_project_env_template()
     if template is None:
-        print("[WARN] .env.clconotify-example not found or marker missing - skipping env copy")
-        print("[INFO]  Create .env.clconotify manually with SLACK_NOTIFY_PROJECT_NAME set.")
+        print("[WARN] .env.clco-example not found or marker missing - skipping env copy")
+        print("[INFO]  Create .env.clco manually with SLACK_NOTIFY_PROJECT_NAME set.")
         return
 
     env_dir.mkdir(parents=True, exist_ok=True)
@@ -353,11 +353,11 @@ def step_copy_env_project(env_dir):
 
 
 def step_set_user(env_dir, user_id, email):
-    """Write --user-id / --email into .env.clconotify."""
-    env_path = env_dir / ".env.clconotify"
+    """Write --user-id / --email into .env.clco."""
+    env_path = env_dir / ".env.clco"
 
     if not env_path.exists():
-        print("[WARN] .env.clconotify not found - skipping user ID / email write")
+        print("[WARN] .env.clco not found - skipping user ID / email write")
         return
 
     if user_id:
@@ -385,15 +385,15 @@ def step_gitignore(project_root):
     if gitignore_path.exists():
         content = gitignore_path.read_text(encoding="utf-8", errors="replace")
         if GITIGNORE_MARKER in content:
-            print("[SKIP] .gitignore already contains .env.clconotify")
+            print("[SKIP] .gitignore already contains .env.clco")
             return
         with open(gitignore_path, "a", encoding="utf-8") as f:
             f.write(GITIGNORE_BLOCK)
-        print("[OK]   Added .env.clconotify to .gitignore")
+        print("[OK]   Added .env.clco to .gitignore")
     else:
         with open(gitignore_path, "w", encoding="utf-8") as f:
             f.write(GITIGNORE_MARKER + "\n")
-        print("[OK]   Created .gitignore with .env.clconotify")
+        print("[OK]   Created .gitignore with .env.clco")
 
 
 # ---------------------------------------------------------------------------
@@ -426,7 +426,7 @@ def main():
         print("[DONE] Project env installed.")
         print()
         print("Next step:")
-        print("  Edit " + str(env_dir / ".env.clconotify") + " and set SLACK_NOTIFY_PROJECT_NAME.")
+        print("  Edit " + str(env_dir / ".env.clco") + " and set SLACK_NOTIFY_PROJECT_NAME.")
         return
 
     python_cmd = resolve_python(args.python)
@@ -450,7 +450,7 @@ def main():
     print("[DONE] Setup complete.")
     print()
     print("Next steps:")
-    print("  1. Edit " + str(env_dir / ".env.clconotify"))
+    print("  1. Edit " + str(env_dir / ".env.clco"))
     print("  2. Set SLACK_BOT_TOKEN=xoxb-...")
     if not args.user_id and not args.email:
         print("  3. Set SLACK_NOTIFY_USER_ID or SLACK_NOTIFY_USER_EMAIL")

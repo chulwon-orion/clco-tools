@@ -4,8 +4,8 @@ clco-notify — Claude Code Slack Notification Hook
 Sends delayed Slack notifications. If the user responds before the delay
 expires, the notification is cancelled automatically.
 
-Config file: .env.clconotify  (project root or ~/.claude/, gitignored)
-Template:    .env.clconotify-example
+Config file: .env.clco  (project root or ~/.claude/, gitignored)
+Template:    .env.clco-example
 
 Runtime files (gitignored):
   .claude/hooks/.session_state.json   — last prompt per session
@@ -36,11 +36,11 @@ from pathlib import Path
 
 def load_config():
     config = {}
-    # Search order: project root (.env.clconotify) → global (~/.claude/.env.clconotify)
+    # Search order: project root (.env.clco) -> global (~/.claude/.env.clco)
     # Both files are read; project-level values take precedence over global.
     candidates = [
-        Path.cwd() / ".env.clconotify",
-        Path.home() / ".claude" / ".env.clconotify",
+        Path.cwd() / ".env.clco",
+        Path.home() / ".claude" / ".env.clco",
     ]
     for config_path in candidates:
         if config_path.exists():

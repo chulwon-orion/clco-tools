@@ -19,4 +19,4 @@ python3 ~/.claude/commands/wiki_push.py $ARGUMENTS
 ```
 
 After the command completes, report the Confluence page URL to the user.
-If an error occurs, show the error message and suggest checking `.env.clcowiki` configuration.
+If an error occurs, show the error message and suggest checking `.env.clco` configuration.
