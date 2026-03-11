@@ -158,7 +158,7 @@ def install_wiki(cfg: dict, python: str) -> None:
 
 def install_show(cfg: dict, python: str) -> None:
     print("\n" + "=" * 50)
-    print("3/3  clco-show - global install")
+    print("3/4  clco-show - global install")
     print("=" * 50)
 
     setup = REPO_ROOT / "src" / "clco_show" / "setup_clco_show.py"
@@ -170,12 +170,52 @@ def install_show(cfg: dict, python: str) -> None:
     run([python, str(setup)], env=utf8_env)
 
 
+def install_knowledge() -> None:
+    import shutil
+
+    print("\n" + "=" * 50)
+    print("4/4  knowledge - global install")
+    print("=" * 50)
+
+    dest = Path.home() / ".claude" / "knowledge"
+    dest.mkdir(parents=True, exist_ok=True)
+
+    # Source: workspace-meta/conventions/ (preferred - single source of truth)
+    workspace_conventions = REPO_ROOT.parent / "workspace-meta" / "conventions"
+    # Fallback: src/.claude-global/knowledge/ (local copies for standalone install)
+    local_knowledge = REPO_ROOT / "src" / ".claude-global" / "knowledge"
+
+    if workspace_conventions.exists():
+        src_dir = workspace_conventions
+        print(f"Source: {src_dir} (workspace-meta)")
+    elif local_knowledge.exists():
+        src_dir = local_knowledge
+        print(f"Source: {src_dir} (local fallback)")
+    else:
+        print("[SKIP] No knowledge source found. Skipping.")
+        print(f"  Expected: {workspace_conventions}")
+        return
+
+    count = 0
+    for md_file in sorted(src_dir.glob("*.md")):
+        if md_file.name == "README.md":
+            continue
+        shutil.copy2(md_file, dest / md_file.name)
+        print(f"  [OK] {md_file.name} -> {dest / md_file.name}")
+        count += 1
+
+    if count == 0:
+        print("[WARN] No .md files found in source directory.")
+    else:
+        print(f"\n-> {count} knowledge file(s) installed to {dest}")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Install clco-notify, clco-wiki, and clco-show globally")
+    parser = argparse.ArgumentParser(description="Install clco-notify, clco-wiki, clco-show, and knowledge globally")
     parser.add_argument(
         "--env-file",
         default=str(REPO_ROOT / ".env.clco"),
@@ -196,11 +236,13 @@ def main() -> None:
     install_notify(cfg, python)
     install_wiki(cfg, python)
     install_show(cfg, python)
+    install_knowledge()
 
     print("\n" + "=" * 50)
     print("All done!")
     print("=" * 50)
     print(f"  shared env file : {Path.home() / '.claude' / '.env.clco'}")
+    print(f"  knowledge dir   : {Path.home() / '.claude' / 'knowledge'}")
     print()
     print("Reload Claude Code (or start a new session) to activate.")
 

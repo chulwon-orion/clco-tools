@@ -1,5 +1,8 @@
 Push a local Markdown file to Atlassian Confluence.
 
+Before pushing, read `~/.claude/knowledge/confluence-conventions.md` (if it exists)
+to apply team-specific space keys, page naming conventions, and parent page structure.
+
 Run the following command:
 ```
 python3 ~/.claude/commands/wiki_push.py $ARGUMENTS

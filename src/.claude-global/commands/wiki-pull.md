@@ -1,5 +1,8 @@
 Pull an Atlassian Confluence page to a local Markdown file.
 
+Before pulling, read `~/.claude/knowledge/confluence-conventions.md` (if it exists)
+to understand team-specific space keys and page naming conventions.
+
 Run the following command:
 ```
 python3 ~/.claude/commands/wiki_pull.py $ARGUMENTS
