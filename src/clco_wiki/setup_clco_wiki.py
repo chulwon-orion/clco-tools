@@ -12,6 +12,7 @@ Options:
     --space-key KEY     Default Confluence space key (e.g. MYSPACE)
     --parent-id ID      Default parent page ID (optional)
     --force             Overwrite existing files without prompting
+    --update            Copy command files and clco_wiki package (skip env, gitignore)
 """
 
 import argparse
@@ -121,10 +122,34 @@ def main() -> None:
     parser.add_argument("--space-key", help="Default Confluence space key")
     parser.add_argument("--parent-id", help="Default parent page ID")
     parser.add_argument("--force", action="store_true", help="Overwrite existing files")
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Copy command files and clco_wiki package (skip env, gitignore)",
+    )
     args = parser.parse_args()
 
-    print("clco-wiki setup")
+    print("clco-wiki setup" + (" (update)" if args.update else ""))
     print("=" * 40)
+
+    if args.update:
+        print_step("Updating command files in ~/.claude/commands/")
+        DEST_DIR.mkdir(parents=True, exist_ok=True)
+        for fname in FILES_TO_COPY:
+            src = SRC_COMMANDS_DIR / fname
+            if not src.exists():
+                print_warn(f"Source file not found: {src}")
+                continue
+            copy_file(src, DEST_DIR / fname, force=True)
+        print_step("Updating clco_wiki package in ~/.claude/commands/clco_wiki/")
+        src_pkg = SRC_COMMANDS_DIR / PACKAGE_DIR
+        if src_pkg.exists():
+            copy_package(src_pkg, DEST_DIR / PACKAGE_DIR, force=True)
+        else:
+            print_warn(f"Package directory not found: {src_pkg}")
+        print("\n" + "=" * 40)
+        print("[DONE] Command files updated.")
+        return
 
     # ---- Step 1: Copy command files to ~/.claude/commands/ ----------
     print_step("Installing command files to ~/.claude/commands/")

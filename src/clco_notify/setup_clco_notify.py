@@ -8,6 +8,8 @@ With --project PATH:    installs into <PATH>/.claude/ for a specific project onl
 With --env-only:        installs only .env.clco with SLACK_NOTIFY_PROJECT_NAME set.
                         Requires --project. Useful when the hook is already installed globally
                         and you only need a project-specific config override.
+With --update:          copies only the hook .py script (skip env and settings.json).
+                        Use this to update the hook script without touching any config.
 
 Usage:
     python3 setup_clco_notify.py                                         # global install
@@ -16,6 +18,8 @@ Usage:
     python3 setup_clco_notify.py --project /path/to/proj --user-id U...  # project + Slack user
     python3 setup_clco_notify.py --project /path/to/proj --env-only      # project env only
     python3 setup_clco_notify.py --project . --env-only                  # current dir env only
+    python3 setup_clco_notify.py --update                                 # update hook script only (global)
+    python3 setup_clco_notify.py --project . --update                    # update hook script only (project)
 
 Options:
     --project DIR    Project root directory. Installs into <DIR>/.claude/ instead of ~/.claude/
@@ -24,6 +28,9 @@ Options:
                      SLACK_NOTIFY_PROJECT_NAME active; all other keys are commented out.
                      The hook merges this file with ~/.claude/.env.clco at runtime,
                      so SLACK_BOT_TOKEN and other global settings still apply.
+    --update         Only copy the hook .py script. Skips env file and settings.json.
+                     Use this when the hook is already configured and you only want to
+                     update the script itself (e.g. after pulling a new version).
     --user-id ID     Slack User ID to DM (e.g. U0123456789)
                      Find: Slack -> click username -> ... -> Copy member ID
     --email EMAIL    Slack user email (alternative to --user-id, requires users:read.email scope)
@@ -115,6 +122,12 @@ def parse_args():
             "Only install .env.clco (skip hook and settings.json). "
             "Requires --project. Creates a minimal env with only SLACK_NOTIFY_PROJECT_NAME active."
         ),
+    )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        default=False,
+        help="Only copy the hook .py script. Skips env file and settings.json.",
     )
     parser.add_argument(
         "--python",
@@ -409,10 +422,18 @@ def main():
 
     scope, claude_dir, env_dir, hook_cmd_path = resolve_scope(args)
 
+    mode = " (env only)" if args.env_only else " (hook update only)" if args.update else ""
     print("clco-notify Setup")
-    print("Scope:  " + scope + (" (env only)" if args.env_only else ""))
-    print("Target: " + str(env_dir))
+    print("Scope:  " + scope + mode)
+    print("Target: " + str(claude_dir))
     print("-" * 40)
+
+    if args.update:
+        if not step_copy_hook(claude_dir):
+            sys.exit(1)
+        print("-" * 40)
+        print("[DONE] Hook script updated.")
+        return
 
     if args.env_only:
         step_copy_env_project(env_dir)

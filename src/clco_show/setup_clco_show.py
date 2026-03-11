@@ -3,7 +3,11 @@
 clco-show setup: Install clco-show commands into ~/.claude/commands/.
 
 Usage:
-    python3 setup_clco_show.py [--force]
+    python3 setup_clco_show.py [--force] [--update]
+
+Options:
+    --force     Overwrite existing files without prompting
+    --update    Copy command files and clco_show package (skip nothing)
 """
 
 import argparse
@@ -80,10 +84,35 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing files without prompting",
     )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Copy all command files and clco_show package (force-overwrite, skip nothing)",
+    )
     args = parser.parse_args()
 
-    print("clco-show setup")
+    print("clco-show setup" + (" (update)" if args.update else ""))
     print("=" * 40)
+
+    if args.update:
+        print_step("Updating .py scripts in ~/.claude/commands/")
+        DEST_DIR.mkdir(parents=True, exist_ok=True)
+        for fname in FILES_TO_COPY:
+            src = SRC_COMMANDS_DIR / fname
+            if not src.exists():
+                print_warn(f"Source file not found: {src}")
+                continue
+            copy_file(src, DEST_DIR / fname, force=True)
+        print_step("Updating clco_show package in ~/.claude/commands/clco_show/")
+        src_pkg = SRC_COMMANDS_DIR / PACKAGE_DIR
+        if src_pkg.exists():
+            copy_package(src_pkg, DEST_DIR / PACKAGE_DIR, force=True)
+        else:
+            print_warn(f"Package directory not found: {src_pkg}")
+            sys.exit(1)
+        print("\n" + "=" * 40)
+        print("[DONE] Python scripts updated.")
+        return
 
     # ---- Step 1: Copy command files to ~/.claude/commands/ ----------
     print_step("Installing command files to ~/.claude/commands/")

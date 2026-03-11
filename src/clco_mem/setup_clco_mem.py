@@ -3,7 +3,11 @@
 clco-mem setup: Install clco-memstat and clco-mempack commands into ~/.claude/commands/.
 
 Usage:
-    python3 setup_clco_mem.py [--force]
+    python3 setup_clco_mem.py [--force] [--update]
+
+Options:
+    --force     Overwrite existing files without prompting
+    --update    Copy command files (skip nothing — same as full install without prompts)
 """
 
 import argparse
@@ -66,10 +70,32 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing files without prompting",
     )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Copy all command files (force-overwrite, skip nothing)",
+    )
     args = parser.parse_args()
 
-    print("clco-mem setup")
+    print("clco-mem setup" + (" (update)" if args.update else ""))
     print("=" * 40)
+
+    if args.update:
+        print_step("Updating .py scripts in ~/.claude/commands/")
+        DEST_DIR.mkdir(parents=True, exist_ok=True)
+        missing = False
+        for fname in FILES_TO_COPY:
+            src = SRC_COMMANDS_DIR / fname
+            if not src.exists():
+                print_warn(f"Source file not found: {src}")
+                missing = True
+                continue
+            copy_file(src, DEST_DIR / fname, force=True)
+        if missing:
+            sys.exit(1)
+        print("\n" + "=" * 40)
+        print("[DONE] Python scripts updated.")
+        return
 
     print_step("Installing command files to ~/.claude/commands/")
     DEST_DIR.mkdir(parents=True, exist_ok=True)
