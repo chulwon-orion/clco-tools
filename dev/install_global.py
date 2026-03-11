@@ -8,6 +8,7 @@ Reads .env.clco from the repo root, then:
   3. Installs clco-wiki globally into ~/.claude/commands/
      (runs setup from ~/.claude/ so .env.clco lands at ~/.claude/.env.clco)
   4. Installs clco-show globally into ~/.claude/commands/
+  5. Installs clco-mem globally into ~/.claude/commands/
 
 Usage:
     python dev/install_global.py
@@ -158,10 +159,24 @@ def install_wiki(cfg: dict, python: str) -> None:
 
 def install_show(cfg: dict, python: str) -> None:
     print("\n" + "=" * 50)
-    print("3/4  clco-show - global install")
+    print("3/5  clco-show - global install")
     print("=" * 50)
 
     setup = REPO_ROOT / "src" / "clco_show" / "setup_clco_show.py"
+    if not setup.exists():
+        print(f"[ERROR] Not found: {setup}")
+        sys.exit(1)
+
+    utf8_env = {**os.environ, "PYTHONUTF8": "1"}
+    run([python, str(setup)], env=utf8_env)
+
+
+def install_mem(cfg: dict, python: str) -> None:
+    print("\n" + "=" * 50)
+    print("4/5  clco-mem - global install")
+    print("=" * 50)
+
+    setup = REPO_ROOT / "src" / "clco_mem" / "setup_clco_mem.py"
     if not setup.exists():
         print(f"[ERROR] Not found: {setup}")
         sys.exit(1)
@@ -174,7 +189,7 @@ def install_knowledge() -> None:
     import shutil
 
     print("\n" + "=" * 50)
-    print("4/4  knowledge - global install")
+    print("5/5  knowledge - global install")
     print("=" * 50)
 
     dest = Path.home() / ".claude" / "knowledge"
@@ -215,7 +230,7 @@ def install_knowledge() -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Install clco-notify, clco-wiki, clco-show, and knowledge globally")
+    parser = argparse.ArgumentParser(description="Install clco-notify, clco-wiki, clco-show, clco-mem, and knowledge globally")
     parser.add_argument(
         "--env-file",
         default=str(REPO_ROOT / ".env.clco"),
@@ -236,6 +251,7 @@ def main() -> None:
     install_notify(cfg, python)
     install_wiki(cfg, python)
     install_show(cfg, python)
+    install_mem(cfg, python)
     install_knowledge()
 
     print("\n" + "=" * 50)
