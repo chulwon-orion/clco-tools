@@ -27,17 +27,23 @@ python3 .claude/hooks/clco_notify.py --cancel-all
 ## Setup / Installation
 
 ```bash
-# Basic setup (auto-detects Python)
-python3 src/notify/setup_clco_notify.py
+# Full global install (all tools at once — recommended)
+python3 dev/install_global.py
 
-# Recommended: provide Slack User ID directly
-python3 src/notify/setup_clco_notify.py --user-id U0123456789
+# Or install individually:
+python3 src/clco_notify/setup_clco_notify.py --user-id U0123456789
+python3 src/clco_wiki/setup_clco_wiki.py --base-url https://... --username ...
+python3 src/clco_show/setup_clco_show.py
+python3 src/clco_mem/setup_clco_mem.py
 
-# Or use email lookup (requires users:read.email Slack scope)
-python3 src/notify/setup_clco_notify.py --email your.name@company.com
+# Update deployed scripts without touching env/config (all setup scripts support --update):
+python3 src/clco_notify/setup_clco_notify.py --update   # hook .py only
+python3 src/clco_wiki/setup_clco_wiki.py --update       # commands + package, skip env
+python3 src/clco_show/setup_clco_show.py --update       # commands + package, skip env
+python3 src/clco_mem/setup_clco_mem.py --update         # commands only
 ```
 
-The setup script copies the hook to `.claude/hooks/clco_notify.py`, merges hook events into `.claude/settings.json`, and creates `.env.clconotify` from the template.
+The setup script copies the hook to `.claude/hooks/clco_notify.py`, merges hook events into `.claude/settings.json`, and creates `.env.clco` from the template.
 
 ## Architecture
 
@@ -47,7 +53,10 @@ The setup script copies the hook to `.claude/hooks/clco_notify.py`, merges hook 
 |---|---|
 | [src/.claude-global/](src/.claude-global/) | Files installed into the user's **global** `~/.claude/` (apply to all projects) |
 | [src/.claude-project/](src/.claude-project/) | Files installed into a **project-level** `.claude/` (apply to one project only) |
-| [src/notify/](src/notify/) | clco-notify tool: hook script, setup installer, config template, docs |
+| [src/clco_notify/](src/clco_notify/) | clco-notify tool: setup installer, config template, docs |
+| [src/clco_wiki/](src/clco_wiki/) | clco-wiki tool: setup installer, env template, docs |
+| [src/clco_show/](src/clco_show/) | clco-show tool: setup installer, docs |
+| [src/clco_mem/](src/clco_mem/) | clco-mem tool: setup installer |
 | [dev/](dev/) | Build, test, and package scripts shared across all tools |
 | [output/](output/) | Generated artifacts from `dev/` scripts (builds, zip packages) — not committed |
 | [test/](test/) | Temporary files used during manual testing — not committed |
@@ -175,6 +184,93 @@ Page metadata is stored as HTML comments at the top of MD files (invisible in re
 | `CONFLUENCE_PROJECT_NAME` | No | Label for project identification |
 
 Config file search order: `(cwd)/.env.clcowiki` → `~/.env.clcowiki`
+
+---
+
+## clco-show
+
+**clco-show** generates self-contained, arrow-key navigable HTML slideshows from JSON data. Installed as the `/show` Claude Code slash command.
+
+### Usage
+
+```bash
+/show                      # Claude generates slides from conversation context
+/show notes.md             # Claude reads file and generates slides
+/show data.json            # Render existing slide JSON directly
+/show data.json --open     # Render and open in browser
+/show data.json --pdf      # Export PDF (requires: pip install playwright && playwright install chromium)
+```
+
+### Architecture (Three-Layer Pattern)
+
+| Layer | Files | Role |
+|---|---|---|
+| Knowledge | `~/.claude/knowledge/*.md` | Team conventions read by Claude before acting |
+| Skill Prompt | `show.md` | Claude instructions (how to interpret input) |
+| Execution | `show.py` + `clco_show/renderer.py` + `clco_show/style.css` | HTML rendering |
+
+### Key Files
+
+| File | Purpose |
+|---|---|
+| [src/.claude-global/commands/show.md](src/.claude-global/commands/show.md) | `/show` skill definition |
+| [src/.claude-global/commands/show.py](src/.claude-global/commands/show.py) | CLI entry point |
+| [src/.claude-global/commands/clco_show/renderer.py](src/.claude-global/commands/clco_show/renderer.py) | HTML renderer (pure stdlib) |
+| [src/.claude-global/commands/clco_show/style.css](src/.claude-global/commands/clco_show/style.css) | All visual styling — edit here |
+| [src/clco_show/setup_clco_show.py](src/clco_show/setup_clco_show.py) | Installer |
+
+### Input JSON Format
+
+```json
+{
+  "title": "Title",
+  "slides": [
+    {
+      "title": "Slide Title",
+      "content": [
+        { "type": "text",  "value": "..." },
+        { "type": "code",  "language": "python", "value": "..." },
+        { "type": "table", "headers": ["A", "B"], "rows": [["1", "2"]] },
+        { "type": "list",  "items": ["Item 1", "Item 2"] },
+        { "type": "badge", "label": "Status", "value": "OK", "style": "good" }
+      ]
+    }
+  ]
+}
+```
+
+Badge styles: `good` (green), `mid` (yellow), `low` (red), `info` (blue)
+
+---
+
+## clco-mem
+
+**clco-mem** provides two Claude Code slash commands for managing `MEMORY.md` files: `/clco-memstat` (health check) and `/clco-mempack` (compression/archiving).
+
+### Usage
+
+```bash
+/clco-memstat    # show MEMORY.md line count, warnings, referenced topic files
+/clco-mempack    # compress MEMORY.md by archiving old sections to topic files
+```
+
+### Key Files
+
+| File | Purpose |
+|---|---|
+| [src/.claude-global/commands/clco_memstat.py](src/.claude-global/commands/clco_memstat.py) | Stat script: line count, thresholds, file list |
+| [src/.claude-global/commands/clco-memstat.md](src/.claude-global/commands/clco-memstat.md) | `/clco-memstat` skill definition |
+| [src/.claude-global/commands/clco-mempack.md](src/.claude-global/commands/clco-mempack.md) | `/clco-mempack` skill definition (Claude-driven) |
+| [src/clco_mem/setup_clco_mem.py](src/clco_mem/setup_clco_mem.py) | Installer |
+
+### Memory Thresholds
+
+| Lines | Status |
+|---|---|
+| < 150 | OK |
+| 150-179 | WARN — approaching limit |
+| 180-199 | ALERT — compress soon |
+| >= 200 | CRITICAL — truncation limit reached |
 
 ---
 
