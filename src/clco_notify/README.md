@@ -94,19 +94,33 @@ SLACK_NOTIFY_PROJECT_NAME=MyProject
 
 ## 메시지 형식
 
+Slack Block Kit 형식으로 전송됩니다 (모바일 푸시/토스트에는 텍스트 미리보기 표시).
+
+**작업 완료 시:**
 ```
-Project: MyProject | Session: a3f8c21b
-✅ Claude Code finished responding.
-``` ChromaDB 연결 오류 분석하고 auto-reconnect 추가해줘
+[헤더]  ✅  Claude Code finished responding.
+[컨텍스트]  Project: MyProject  |  Session: a3f8c21b  |  Elapsed: 45s
+[섹션]  Last prompt:
+        ```
+        ChromaDB 연결 오류 분석하고 auto-reconnect 추가해줘
+        ```
 ```
 
-질문 또는 권한 요청의 경우:
+**질문 또는 권한 요청 시:**
 ```
-Project: MyProject | Session: a3f8c21b
-❓ Claude Code has a question for you.
-``` 이전 작업 내용
-> 기존 코드를 유지하면서 추가할까요, 아니면 전면 재작성할까요?
+[헤더]  ❓  Claude Code has a question for you.
+[컨텍스트]  Project: MyProject  |  Session: a3f8c21b
+[섹션]  Last prompt:
+        ```
+        이전 작업 내용
+        ```
+[구분선]
+[섹션]  Message:
+        > 기존 코드를 유지하면서 추가할까요, 아니면 전면 재작성할까요?
 ```
+
+**스레드 묶음:** 같은 세션의 두 번째 알림부터는 첫 메시지의 스레드에 달립니다.
+채널에는 세션당 메시지 1개만 표시되고, 후속 알림은 스레드로 정리됩니다.
 
 ---
 
